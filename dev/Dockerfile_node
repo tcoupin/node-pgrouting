@@ -1,0 +1,16 @@
+FROM node
+
+ARG UID
+ARG GID
+ARG USER
+
+RUN groupadd -o -g $GID $USER && \
+	useradd -o -u $UID -g $GID -m $USER && \
+	npm install -g grunt-cli && \
+	mkdir /app && \
+	chown $USER:$USER /app
+USER $USER
+WORKDIR /app
+
+COPY package.json /app/package.json
+RUN npm install

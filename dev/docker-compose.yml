@@ -1,0 +1,35 @@
+version: '3.0'
+
+services:
+  postgres:
+    image: camptocamp/postgres:10.0
+    env_file: env.psql
+  node:
+    build:
+      context: ..
+      dockerfile: dev/Dockerfile_node
+      args:
+        UID: ${UID}
+        GID: ${GID}
+        USER: ${USER}
+    ports:
+      - "8080:8080"
+    env_file: env.node
+    links:
+      - postgres
+    volumes:
+      - '..:/app'
+    tty: true
+
+  gdal:
+    image: geodata/gdal:2.1.3
+    links:
+      - postgres
+    volumes:
+      - "./data:/data"
+    env_file: env.psql
+    tty: true
+    command: bash
+
+
+      

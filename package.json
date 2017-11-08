@@ -1,0 +1,33 @@
+{
+  "name": "node-pgrouting",
+  "version": "0.1.0",
+  "description": "Simple routing API based on pgrouting.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "url": "https://git@github.com/tcoupin/node-pgrouting.git"
+  },
+  "keywords": [
+    "pgrouting"
+  ],
+  "author": "Thibault Coupin <thibault.coupin@gmail.com>",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/tcoupin/node-pgrouting/issues"
+  },
+  "homepage": "https://github.com/tcoupin/node-pgrouting#README",
+  "devDependencies": {
+    "express": "^4.16.2",
+    "grunt": "^1.0.1",
+    "grunt-contrib-nodemon": "^0.5.4",
+    "grunt-env": "^0.4.4",
+    "grunt-mocha-test": "^0.13.3",
+    "it-each": "^0.3.1",
+    "mocha": "^4.0.1"
+  },
+  "dependencies": {
+    "pg": "^7.4.0"
+  }
+}

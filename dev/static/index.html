@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Test node-pgrouting</title>
+		<style type="text/css">
+			#map {
+				width: 800px;
+				height: 600px;
+				cursor: unset;
+			}
+			table {
+				border: solid 1px;
+			}
+		</style>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css" integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ==" crossorigin="" />
+		<link rel="stylesheet" href="https://cdn.rawgit.com/aratcliffe/Leaflet.contextmenu/2404757b/dist/leaflet.contextmenu.min.css" />
+		<script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js" integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log==" crossorigin=""></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script src="https://cdn.rawgit.com/aratcliffe/Leaflet.contextmenu/2404757b/dist/leaflet.contextmenu.min.js"></script>
+		<script src="https://cdn.rawgit.com/leaflet-extras/leaflet.sprite/gh-pages/dist/leaflet.sprite.js"></script>
+	</head>
+	<body>
+		<div id="map"></div>
+		<div id="form">
+			<div id="type">
+				<h3>Compute route with the smallest:</h3>
+			</div>
+			<div id="filters">
+				<h3>Avoid:</h3>
+			</div>
+		</div>
+		<div id="results"></div>
+		<script>
+					var setStartPoint = function(e){
+						if (startLayer !== undefined){
+							mymap.removeLayer(startLayer);
+						}
+						startLayer = L.marker([e.latlng.lat, e.latlng.lng],{icon: L.spriteIcon('green')}).addTo(mymap);
+						routeMe();
+					}
+					var setEndPoint = function(e){
+						if (endLayer !== undefined){
+							mymap.removeLayer(endLayer);
+						}
+						endLayer = L.marker([e.latlng.lat, e.latlng.lng],{icon: L.spriteIcon('red')}).addTo(mymap);
+						routeMe();
+					}
+					var mymap = L.map('map',
+						{
+							contextmenu: true,
+							contextmenuWith: 140,
+							contextmenuItems: [
+								{text: 'Start here',callback: setStartPoint},
+								{text: 'Go here',callback: setEndPoint},
+							]
+						}
+					).setView([46.87521339672271, 2.65869140625], 6);
+					var layer = new L.TileLayer(
+						"//wxs.ign.fr/pratique/geoportail/wmts?layer=GEOGRAPHICALGRIDSYSTEMS.MAPS&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image/jpeg&TileMatrix={z}&TileCol={x}&TileRow={y}",
+						{
+						attribution: "IGN France",
+						opacity: 0.3
+						}
+					).addTo(mymap);
+					var baseLayers = {
+					    "IGN Maps": layer
+					};
+					var overlays = {
+					};
+					var layerControl = L.control.layers(baseLayers, overlays).addTo(mymap);
+					var startLayer, endLayer, resultLayer, types, properties;
+					$.getJSON("/data/route120_IGN-F/route.geojson",function(data){
+						layerControl.addOverlay(L.geoJSON(data, {
+							style: function (feature) {
+								
+								if (feature.properties.VOCATION == "Type autoroutier"){
+									return {color: "#320000", weight:2}
+								} else if (feature.properties.VOCATION == "Liaison régionale"){
+									return {color: "#FF0000", weight:1}
+								} else if (feature.properties.VOCATION == "Liaison principale"){
+									return {color: "#009EFF", weight:1}
+								} else if (feature.properties.VOCATION == "Liaison locale"){
+									return {color: "#13C83C", weight:1}
+								} else {
+									return {color: "#000000", weight:2}
+								}
+							}
+						}), "Route120");
+					})
+					$.getJSON("/app/capabilities", function(capa){
+						types = capa.types
+						properties = capa.properties
+						capa.types.forEach((v)=>{
+							$("div#type").append("<input type='radio' id='type"+v+"' name='type' value='"+v+"'><label for='type"+v+"'>"+v+"</label>")
+						})
+						$("div#type input").first().prop("checked",true);
+						capa.filters.forEach((v)=>{
+							$("div#filters").append("<input type='checkbox' id='type"+v+"' name='type' value='"+v+"'><label for='type"+v+"'>"+v+"</label>")
+						})
+						$("div#form input").on('change',routeMe);
+					});
+					var routeMe = function(){
+						console.log("routeMe")
+						if (startLayer === undefined || endLayer === undefined){
+							return;
+						}
+						let startPoint = startLayer.getLatLng().lat+","+startLayer.getLatLng().lng;
+						let endPoint = endLayer.getLatLng().lat+","+endLayer.getLatLng().lng;
+						let type = $("div#type input:checked").val();
+						let filters = [];
+						$("div#filters input:checked").each(function(){
+							filters.push($(this).val())
+						})
+						filters = filters.join(',');
+
+						let url = "/app/route?";
+						url+="from="+startPoint+"&";
+						url+="to="+endPoint+"&";
+						url+="type="+type+"&";
+						url+="avoid="+filters;
+						console.log(url)
+						$.getJSON(url,function(data){
+							if (resultLayer !== undefined){
+								mymap.removeLayer(resultLayer);
+							}
+							resultLayer = L.geoJSON(data).addTo(mymap);
+							$("#results").empty();
+							$("#results").append("<h3>Results</h3>")
+							$("#results").append(()=>{
+								let table = $("<table>")
+								table.append("<tr><th>StartDistance</th><td>"+data.snappingDistance.start+"</td></tr>")
+								table.append("<tr><th>EndDistance</th><td>"+data.snappingDistance.end+"</td></tr>")
+								types.forEach((v)=>{
+									table.append("<tr><th>Cost "+v+"</th><td>"+data.cost[v]+"</td></tr>")
+								})
+								return table
+							})
+							
+							$("#results").append(()=>{
+								let table = $("<table>")
+								table.append("<tr><th>seq</th><th>"+(types.join('</th><th>'))+"</th><th>"+(properties.join('</th><th>'))+"</th></tr>")
+								data.features.forEach((feat)=>{
+									let tr = $("<tr>");
+									tr.append("<td>"+feat.properties.seq+"</td>")
+									types.forEach((v)=>{
+										tr.append("<td>"+feat.properties[v]+"</td>")
+									})
+									properties.forEach((v)=>{
+										tr.append("<td>"+feat.properties[v]+"</td>")
+									})
+									table.append(tr)
+								})
+								return table
+							})
+						})
+					}
+		</script>
+	</body>
+</html>
