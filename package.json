@@ -4,7 +4,7 @@
   "description": "Simple routing API based on pgrouting.",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\""
   },
   "repository": {
     "url": "https://git@github.com/tcoupin/node-pgrouting.git"
