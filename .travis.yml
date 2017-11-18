@@ -1,7 +1,22 @@
-language: node_js
-sudo: false
-node_js:
-  - "node"
+sudo: required
+
+language: bash
+
+services:
+  - docker
+
+before_script:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/1.17.1/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+  - docker-compose -p pgr -f dev/docker-compose.yml up -d
+  - docker exec -i -t pgr_node_1 npm install
+  - bash init.sh
+
+script:
+  - docker exec -i -t pgr_node_1 grunt test
+
 deploy:
   provider: npm
   email: thibault.coupin@gmail.com

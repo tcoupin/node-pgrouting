@@ -106,13 +106,13 @@ This table provides:
 
 1. Start demo/dev environmnent
 ```
-UID=$UID GID=$GID USER=$USER docker-compose -p pgr -f dev/docker-compose.yml up -d
+docker-compose -p pgr -f dev/docker-compose.yml up -d
 bash init.sh
 ```
 
 2. Execute a bash inside the node container
 ```
-docker exec -i -t -u $UID pgr_node_1 bash
+docker exec -i -t pgr_node_1 bash
 npm install
 ```
 

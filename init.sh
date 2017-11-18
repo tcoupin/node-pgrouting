@@ -1,9 +1,12 @@
 #!/bin/bash
 source dev/env.psql
-docker exec -i -u 999 pgr_postgres_1 psql $POSTGRES_DB -c "CREATE EXTENSION IF NOT EXISTS postgis;"
-docker exec -i -u 999 pgr_postgres_1 psql $POSTGRES_DB -c "CREATE EXTENSION IF NOT EXISTS pgrouting;"
-docker exec -i pgr_gdal_1 bash -c 'ogr2ogr -progress -overwrite -nln route  -f PostgreSQL PG:"dbname=$POSTGRES_DB host=postgres user=$POSTGRES_USER password=$POSTGRES_PASSWORD port=5432" /data/route120_IGN-F/route.geojson'
-cat | docker exec -i -u 999 pgr_postgres_1 psql $POSTGRES_DB << EOF
+docker exec -u 999 pgr_postgres_1 psql $POSTGRES_DB -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+docker exec -u 999 pgr_postgres_1 psql $POSTGRES_DB -c "CREATE EXTENSION IF NOT EXISTS pgrouting;"
+echo "==Import data=="
+docker exec pgr_gdal_1 ogr2ogr -progress -overwrite -nln route  -f PostgreSQL PG:"dbname=$POSTGRES_DB host=postgres user=$POSTGRES_USER password=$POSTGRES_PASSWORD port=5432" /data/route120_IGN-F/route.geojson
+echo "==Create topology=="
+
+read -d '' sql_request << ENDSQL
 
 
 drop table if exists edge;
@@ -90,4 +93,6 @@ create index edge_geom_idx on edge using gist(the_geom);
 
 select pgr_createtopology('edge',0.0001, clean:=true);
 
-EOF
+ENDSQL
+
+docker exec -u 999 pgr_postgres_1 psql $POSTGRES_DB -c "$sql_request"

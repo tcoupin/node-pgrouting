@@ -1,16 +1,10 @@
 FROM node
 
-ARG UID
-ARG GID
-ARG USER
+ENV NODE_PATH=/usr/local/lib/node_modules
 
-RUN groupadd -o -g $GID $USER && \
-	useradd -o -u $UID -g $GID -m $USER && \
-	npm install -g grunt-cli && \
-	mkdir /app && \
-	chown $USER:$USER /app
-USER $USER
+
 WORKDIR /app
+RUN npm install -g grunt-cli
 
-COPY package.json /app/package.json
-RUN npm install
+CMD bash
+

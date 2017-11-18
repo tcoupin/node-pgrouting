@@ -8,10 +8,6 @@ services:
     build:
       context: ..
       dockerfile: dev/Dockerfile_node
-      args:
-        UID: ${UID}
-        GID: ${GID}
-        USER: ${USER}
     ports:
       - "8080:8080"
     env_file: env.node
