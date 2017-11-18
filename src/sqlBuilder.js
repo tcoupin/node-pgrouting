@@ -12,34 +12,34 @@ module.exports = {
 		} else {
 			filters_where=[]
 			filters.forEach((v)=>{
-				filters_where.push("filter_"+v+" <> true")
+				filters_where.push("edge_table.filter_"+v+" <> true")
 			})
 			filters_where=" AND "+filters_where.join(" AND ")
 		}
-		return `SELECT 	id as edge_id,
-						st_LineLocatePoint(the_geom,st_setsrid(st_makepoint($2,$1),4326)) fraction,
-						st_distance(the_geom,st_setsrid(st_makepoint($2,$1),4326),true) distance,
-						ST_AsGeoJSON(st_LineInterpolatePoint(the_geom,st_LineLocatePoint(the_geom,st_setsrid(st_makepoint($2,$1),4326)))) edge_point
-				FROM ${schema}.${table}
-				WHERE st_dwithin(the_geom,st_setsrid(st_makepoint($2,$1),4326),${maxSnappingDistance},true) ${filters_where}
-				ORDER BY st_distance(the_geom,st_setsrid(st_makepoint($2,$1),4326),true)
+		return `SELECT 	edge_table.id as edge_id,
+						st_LineLocatePoint(edge_table.the_geom,st_setsrid(st_makepoint($2,$1),4326)) as fraction,
+						st_distance(edge_table.the_geom,st_setsrid(st_makepoint($2,$1),4326),true) as distance,
+						ST_AsGeoJSON(st_LineInterpolatePoint(edge_table.the_geom,st_LineLocatePoint(edge_table.the_geom,st_setsrid(st_makepoint($2,$1),4326)))) as edge_point
+				FROM ${schema}.${table} as edge_table
+				WHERE st_dwithin(edge_table.the_geom,st_setsrid(st_makepoint($2,$1),4326),${maxSnappingDistance},true) ${filters_where}
+				ORDER BY st_distance(edge_table.the_geom,st_setsrid(st_makepoint($2,$1),4326),true)
 				LIMIT 1`
 	},
 	searchPath: function(schema, table, type, startPoint, endPoint, types, filters, properties){
 		function costSection(type, startPoint, endPoint){
 			return `
 				    ((case
-				    when tmp.source_node=-1 then (case when tmp.target_node = edge_table.target then (1-${startPoint.fraction})*cost_${type} else (${startPoint.fraction})*reverse_cost_${type} END)
-				    when tmp.target_node=-2 then (case when tmp.source_node = edge_table.source then ${endPoint.fraction}*cost_${type} else (1-${endPoint.fraction})*reverse_cost_${type} end)
-				    else (case when tmp.source_node = edge_table.source then cost_${type} else reverse_cost_${type} END)
-				    end)) ${type},
+				    when tmp.source_node=-1 then (case when tmp.target_node = edge_table.target then (1-${startPoint.fraction})*edge_table.cost_${type} else (${startPoint.fraction})*edge_table.reverse_cost_${type} END)
+				    when tmp.target_node=-2 then (case when tmp.source_node = edge_table.source then ${endPoint.fraction}*edge_table.cost_${type} else (1-${endPoint.fraction})*edge_table.reverse_cost_${type} end)
+				    else (case when tmp.source_node = edge_table.source then edge_table.cost_${type} else edge_table.reverse_cost_${type} END)
+				    end)) as ${type},
 				`
 		}
 		let types_sections ="";
 		let types_aggregate = ""
 		types.forEach((type)=>{
 			types_sections=types_sections+costSection(type,startPoint,endPoint)
-			types_aggregate = types_aggregate+"sum("+type+") "+type+", "
+			types_aggregate = types_aggregate+"sum(tmp."+type+") as "+type+", "
 		})
 
 		let filters_where;
@@ -48,7 +48,7 @@ module.exports = {
 		} else {
 			filters_where=[]
 			filters.forEach((v)=>{
-				filters_where.push("filter_"+v+" <> true")
+				filters_where.push("edge_table.filter_"+v+" <> true")
 			})
 			filters_where="WHERE "+filters_where.join(" AND ")
 		}
@@ -63,7 +63,7 @@ module.exports = {
 		return `
 				with results as (select *
 				FROM pgr_withPoints(
-				    'SELECT id, source, target, cost_${type} as cost, reverse_cost_${type} as reverse_cost FROM ${schema}.${table} ${filters_where}',
+				    'SELECT edge_table.id, edge_table.source, edge_table.target, edge_table.cost_${type} as cost, edge_table.reverse_cost_${type} as reverse_cost FROM ${schema}.${table} as edge_table ${filters_where}',
 				    'SELECT 1 as pid, ${startPoint.edge_id} as edge_id, ${startPoint.fraction}::float as fraction
 				    UNION ALL
 				    SELECT 2, ${endPoint.edge_id}, ${endPoint.fraction}',

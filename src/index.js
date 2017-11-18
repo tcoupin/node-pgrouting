@@ -256,6 +256,8 @@ class RouteEngine {
           reject(new routeError("SnappingError","can not link ("+pos+") to the network (max. distance: "+this.conf.maxSnappingDistance+"m)"))
           return;
         }
+        if (results.rows[0].fraction == 0){results.rows[0].fraction=0.00001;}
+        if (results.rows[0].fraction == 1){results.rows[0].fraction=0.99999;}
         resolve(results.rows[0]);
       })
       .catch((e)=>{
