@@ -8,6 +8,7 @@ class RouteEngine {
     this.conf = conf || {};
     this.conf.table = this.conf.table || process.env.PGTABLE || 'edge';
     this.conf.maxSnappingDistance = this.conf.maxSnappingDistance || 100;
+    this.conf.snappingRatio = this.conf.snappingRatio || 0;
 
 
     if (this.conf.table.split('.').length == 2){

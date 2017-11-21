@@ -40,6 +40,18 @@ describe('Configuration', () => {
 			re.close();
 		});
 	});
+	describe('snappingRatio parameter', () => {
+		it('Default value is 0',()=>{
+			let re = routeEngine();
+			assert.equal(re.conf.snappingRatio, 0);
+			re.close();
+		});
+		it('Use conf value',()=>{
+			let re = routeEngine({snappingRatio: 42});
+			assert.equal(re.conf.snappingRatio, 42);
+			re.close();
+		});
+	});
 	describe('Detect schema in table parameter', () => {
 		it('"public" for default table parameter value',()=>{
 			let re = routeEngine();

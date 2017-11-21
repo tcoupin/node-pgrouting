@@ -1,3 +1,17 @@
+function filterToWhereClause(filters,prefix){
+	let filters_where;
+	if (filters === undefined || filters == ""){
+		filters_where = ""
+	} else {
+		filters_where=[]
+		filters.forEach((v)=>{
+			filters_where.push("edge_table.filter_"+v+" <> true")
+		})
+		filters_where=filters_where.join(" AND ")
+		filters_where = prefix+" "+filters_where
+	}
+	return filters_where;
+}
 module.exports = {
 	getPgVersion: function(){
 		return "SELECT version FROM pgr_version()"
@@ -6,16 +20,7 @@ module.exports = {
 		return "SELECT * FROM information_schema.columns WHERE table_schema = $1 AND table_name = $2";
 	},
 	findNearestPoint: function(schema,table,maxSnappingDistance, filters){
-		let filters_where;
-		if (filters === undefined || filters == ""){
-			filters_where = ""
-		} else {
-			filters_where=[]
-			filters.forEach((v)=>{
-				filters_where.push("edge_table.filter_"+v+" <> true")
-			})
-			filters_where=" AND "+filters_where.join(" AND ")
-		}
+		let filters_where = filterToWhereClause(filters,"AND");
 		return `SELECT 	edge_table.id as edge_id,
 						st_LineLocatePoint(edge_table.the_geom,st_setsrid(st_makepoint($2,$1),4326)) as fraction,
 						st_distance(edge_table.the_geom,st_setsrid(st_makepoint($2,$1),4326),true) as distance,
@@ -42,19 +47,12 @@ module.exports = {
 			types_aggregate = types_aggregate+"sum(tmp."+type+") as "+type+", "
 		})
 
-		let filters_where;
-		if (filters === undefined || filters == ""){
-			filters_where = ""
-		} else {
-			filters_where=[]
-			filters.forEach((v)=>{
-				filters_where.push("edge_table.filter_"+v+" <> true")
-			})
-			filters_where="WHERE "+filters_where.join(" AND ")
-		}
+		let filters_where = filterToWhereClause(filters,"WHERE");
 
 		let properties_list=properties.join(', ');
-		let properties_agg=properties.join(" || '|' || ");
+		let properties_agg=properties.map((v)=>{
+			return "(case when "+v+" is null then 'null' else "+v+" end)"
+		}).join(" || '|' || ");
 		let properties_select = "";
 		properties.forEach((v)=>{
 			properties_select=properties_select+"edge_table."+v+" as "+v+",";
