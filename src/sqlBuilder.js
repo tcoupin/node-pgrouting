@@ -34,6 +34,7 @@ module.exports = {
 		function costSection(type, startPoint, endPoint){
 			return `
 				    ((case
+				    when tmp.source_node=-1 and tmp.target_node=-2 OR tmp.source_node=-2 and tmp.target_node=-1 then (case when ${startPoint.fraction} < ${endPoint.fraction} then (${endPoint.fraction}-${startPoint.fraction})*edge_table.cost_${type} else (${startPoint.fraction}-${endPoint.fraction})*edge_table.reverse_cost_${type} end)
 				    when tmp.source_node=-1 then (case when tmp.target_node = edge_table.target then (1-${startPoint.fraction})*edge_table.cost_${type} else (${startPoint.fraction})*edge_table.reverse_cost_${type} END)
 				    when tmp.target_node=-2 then (case when tmp.source_node = edge_table.source then ${endPoint.fraction}*edge_table.cost_${type} else (1-${endPoint.fraction})*edge_table.reverse_cost_${type} end)
 				    else (case when tmp.source_node = edge_table.source then edge_table.cost_${type} else edge_table.reverse_cost_${type} END)
