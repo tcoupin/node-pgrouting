@@ -18,6 +18,7 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 		<script src="https://cdn.rawgit.com/aratcliffe/Leaflet.contextmenu/2404757b/dist/leaflet.contextmenu.min.js"></script>
 		<script src="https://cdn.rawgit.com/leaflet-extras/leaflet.sprite/gh-pages/dist/leaflet.sprite.js"></script>
+		<script src="https://cdn.rawgit.com/bbecquet/Leaflet.PolylineDecorator/5b40bf0f/dist/leaflet.polylineDecorator.js"></script>
 	</head>
 	<body>
 		<div id="map"></div>
@@ -124,6 +125,21 @@
 								mymap.removeLayer(resultLayer);
 							}
 							resultLayer = L.geoJSON(data).addTo(mymap);
+							var mainLineString = [];
+							resultLayer.eachLayer(function(lay){
+								var geom = lay.feature.geometry;
+								if (geom.type == "LineString"){
+									mainLineString = mainLineString.concat(geom.coordinates)
+								}
+							})
+							for (let i in mainLineString){
+								mainLineString[i]=mainLineString[i].reverse();
+							}
+							resultLayer.addLayer(L.polylineDecorator(mainLineString, {
+    	    					patterns: [
+        	    					{offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions: {fillOpacity: 1, weight: 0}})}
+        						]
+    						}));
 							$("#results").empty();
 							$("#results").append("<h3>Results</h3>")
 							$("#results").append(()=>{

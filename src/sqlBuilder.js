@@ -69,7 +69,7 @@ module.exports = {
 				select ${types_aggregate}
 				${properties_list},
 			 	flag_groupid as seq,
-				st_asgeojson(st_union(the_geom)) the_geom from (
+				st_asgeojson(ST_LineMerge(St_union(the_geom))) the_geom from (
 				select *, sum(flag_newgroup) over (order by seq) flag_groupid from (    
 				select 
 				    ${types_sections}
@@ -77,6 +77,7 @@ module.exports = {
 				    (case when lag(${properties_agg}) OVER (order by seq)=${properties_agg} then 0 else 1 end) flag_newgroup,
 				    ${properties_select}
 				    ((((case
+				    when tmp.source_node=-1 and tmp.target_node=-2 OR tmp.source_node=-2 and tmp.target_node=-1 then (case when ${startPoint.fraction} < ${endPoint.fraction} then ST_LineSubstring(edge_table.the_geom,${startPoint.fraction}, ${endPoint.fraction}) else st_reverse(ST_LineSubstring(edge_table.the_geom, ${endPoint.fraction}, ${startPoint.fraction})) end)
 				    when tmp.source_node=-1 then (case when tmp.target_node = edge_table.target then ST_LineSubstring(edge_table.the_geom,${startPoint.fraction} ,1) else st_reverse(ST_LineSubstring(edge_table.the_geom,0,${startPoint.fraction})) END)
 				    when tmp.target_node=-2 then (case when tmp.source_node = edge_table.source then ST_LineSubstring(edge_table.the_geom,0,${endPoint.fraction}) else st_reverse(ST_LineSubstring(edge_table.the_geom,${endPoint.fraction},1)) end)
 				    else (case when tmp.source_node = edge_table.source then edge_table.the_geom else st_reverse(edge_table.the_geom) END)
