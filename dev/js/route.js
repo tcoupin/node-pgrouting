@@ -3,7 +3,8 @@ module.exports = function(conf){
 	const app = express();
 
 	const routeEngine = require('../../src/index')({
-		maxSnappingDistance: 10000
+		maxSnappingDistance: 10000,
+		snappingRatio: 0.6
 	})
 
 	//compute

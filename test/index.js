@@ -132,7 +132,7 @@ describe("Table dependent parameter",()=>{
 });
 
 describe("Routing function",()=>{
-	let re = routeEngine({maxSnappingDistance:10000});
+	let re = routeEngine({maxSnappingDistance:10000, snappingRatio: 0.6});
 	let validParam = {
 		from: '46,1',
 		to: '47,2',

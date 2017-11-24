@@ -118,25 +118,36 @@ class RouteEngine {
           response.cost[v]=0;
         })
         
-        let startPoint=await this._findNearestEdge(params.from, params.avoid);
-        let endPoint=await this._findNearestEdge(params.to, params.avoid);
-        let path = await this._searchPath(params.type, startPoint, endPoint, params.avoid)
+        let startPoints=await this._findNearestEdge(params.from, params.avoid);
+        let endPoints=await this._findNearestEdge(params.to, params.avoid);
+        
+        let path = await this._searchPath(params.type, startPoints, endPoints, params.avoid)
+        if (path.length == 0){
+          throw new routeError("CanNotCompute","")
+        }
+        path.forEach((step)=>{step.the_geom = JSON.parse(step.the_geom)})
+
+        let startPoint = startPoints[path[0].start_pid-1];
+        startPoint.edge_point = JSON.parse(startPoint.edge_point)
+        let endPoint = endPoints[path[0].end_pid-1-startPoints.length];
+        endPoint.edge_point = JSON.parse(endPoint.edge_point)
+        
 
         // Response building
         response.snappingDistance["start"] = startPoint.distance;
         response.features.push({
-            type: "Feature",
-            properties: {
-              seq: 0
-            },
-            geometry: {
-              type: "LineString",
-              coordinates: [
-                params.from.reverse(),
-                JSON.parse(startPoint.edge_point).coordinates
-              ]
-            }
-          })
+          type: "Feature",
+          properties: {
+            seq: 0
+          },
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              params.from.reverse(),
+              startPoint.edge_point.coordinates
+            ]
+          }
+        })
         let nbseq=0
         path.forEach((step)=>{
           nbseq++;
@@ -145,7 +156,7 @@ class RouteEngine {
             properties: {
               seq: parseInt(step.seq)
             },
-            geometry: JSON.parse(step.the_geom)
+            geometry: step.the_geom
           };
           types.forEach((type)=>{
             feat.properties[type] = step[type];
@@ -166,13 +177,12 @@ class RouteEngine {
             geometry: {
               type: "LineString",
               coordinates: [
-                JSON.parse(endPoint.edge_point).coordinates,
+                endPoint.edge_point.coordinates,
                 params.to.reverse(),
               ]
             }
           })
 
-        //
         
         resolve(response);
       } catch (e){
@@ -251,15 +261,24 @@ class RouteEngine {
 
   _findNearestEdge(pos, filters){
     return new Promise((resolve,reject)=>{
-      this.pool.query(sqlBuilder.findNearestPoint(this.conf.schema, this.conf.table, this.conf.maxSnappingDistance, filters),pos)
+      var sql_request;
+      if (this.conf.snappingRatio == 0){
+        sql_request = sqlBuilder.findNearestPoint(this.conf.schema, this.conf.table, this.conf.maxSnappingDistance, filters);
+      } else {
+        sql_request = sqlBuilder.findNearestPoints(this.conf.schema, this.conf.table, this.conf.maxSnappingDistance, this.conf.snappingRatio, filters);
+      }
+      //console.log(sql_request);
+      this.pool.query(sql_request,pos)
       .then((results)=>{
         if (results.rows.length == 0){
           reject(new routeError("SnappingError","can not link ("+pos+") to the network (max. distance: "+this.conf.maxSnappingDistance+"m)"))
           return;
         }
-        if (results.rows[0].fraction == 0){results.rows[0].fraction=0.00001;}
-        if (results.rows[0].fraction == 1){results.rows[0].fraction=0.99999;}
-        resolve(results.rows[0]);
+        results.rows.forEach((r)=>{
+          if (r.fraction == 0){r.fraction=0.00001;}
+          if (r.fraction == 1){r.fraction=0.99999;}
+        });
+        resolve(results.rows);
       })
       .catch((e)=>{
         reject(e)
@@ -267,12 +286,13 @@ class RouteEngine {
     })
   }
 
-  _searchPath(type, startPoint, endPoint, filters){
+  _searchPath(type, startPoints, endPoints, filters){
     return new Promise(async (resolve,reject)=>{
       let types = await this.getTypes();
       let properties = await this.getProperties();
-      //console.log(sqlBuilder.searchPath(this.conf.schema, this.conf.table, type, startPoint, endPoint, types, filters,properties))
-      this.pool.query(sqlBuilder.searchPath(this.conf.schema, this.conf.table, type, startPoint, endPoint, types, filters, properties))
+      let sql_request=sqlBuilder.searchPath(this.conf.schema, this.conf.table, type, startPoints, endPoints, types, filters, properties);
+      //console.log(sql_request);
+      this.pool.query(sql_request)
       .then((results)=>{
         resolve(results.rows);
       })

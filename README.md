@@ -7,6 +7,7 @@ Features:
 * Multi-cost
 * Filters
 * Aggregation of identical sections based on its properties
+* Multi-snapping
 
 ## How to use ?
 
@@ -71,6 +72,7 @@ The `conf` object let you configure the connection to the database and some rout
 * **Connection parameters:** node-pgrouting use [pg](https://node-postgres.com) as an interface to PostgreSQL database, with the `conf` object as parameters like *host*, *port*, *user*, *password* and *database*. You can use same environment variables as libpq too : see [pg documentation](https://node-postgres.com/features/connecting) for more details.
 * **table:** : table that contains the network. You can use the environment variable *PGTABLE* too. *table* can contain a schema. (Default: *edge*)
 * **maxSnappingDistance:** when process the routing, *node-pgrouting* needs to connect your start and end point to closest edge of the network within *maxSnappingDistance* meters.
+* **snappingRatio:** allow to snap not only the nearest point but also all near points with a distance difference lower than *snappingRatio* (=(distance-min(distance))/min(distance)). (Default: 0 (no ratio)).
 
 ## Data structure
 
