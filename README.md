@@ -108,25 +108,22 @@ This table provides:
 
 1. Start demo/dev environmnent
 ```
-docker-compose -p pgr -f dev/docker-compose.yml up -d
-bash init.sh
+bash dev/up.sh
 ```
 
-2. Execute a bash inside the node container
-```
-docker exec -i -t pgr_node_1 bash
-npm install
-```
+2. Use the GUI or the REST service:
 
-Use `grunt` to load HTTP endpoint:
 - http://127.0.0.1:8080, graphical interface : use the right click to define start and end point.
 - http://127.0.0.1:8080/app/version
 - http://127.0.0.1:8080/app/capabilities
 - http://127.0.0.1:8080/app/route?from=46,1&to=47,2&type=duration&avoid=toll
 
-Use `grunt test` to perform unit tests.
+3. Perform unit tests: 
+```
+docker exec -i -t pgr_node_1 grunt test
+```
 
 4. Cleanup Dev env
 ```
-docker-compose -p pgr -f dev/docker-compose.yml down
+bash dev/down.sh
 ```

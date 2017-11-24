@@ -1,9 +1,28 @@
 #!/bin/bash
-source dev/env.psql
-docker exec -u 999 pgr_postgres_1 psql $POSTGRES_DB -c "CREATE EXTENSION IF NOT EXISTS postgis;"
-docker exec -u 999 pgr_postgres_1 psql $POSTGRES_DB -c "CREATE EXTENSION IF NOT EXISTS pgrouting;"
+
+source $(dirname $0)/env.psql
+
+function dc(){
+	docker-compose -p pgr -f $(dirname $0)/docker-compose.yml "$@"
+}
+
+dc up -d
+dc exec node npm install
+
+status=1
+while [ "$status" != "0" ]
+do
+    sleep 1
+    dc logs postgres | grep "ready for start up"
+    status=$?
+done
+
+
+dc exec -u 999 postgres psql $POSTGRES_DB -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+dc exec -u 999 postgres psql $POSTGRES_DB -c "CREATE EXTENSION IF NOT EXISTS pgrouting;"
+
 echo "==Import data=="
-docker exec pgr_gdal_1 ogr2ogr -progress -overwrite -nln route  -f PostgreSQL PG:"dbname=$POSTGRES_DB host=postgres user=$POSTGRES_USER password=$POSTGRES_PASSWORD port=5432" /data/route120_IGN-F/route.geojson
+dc exec gdal ogr2ogr -progress -overwrite -nln route  -f PostgreSQL PG:"dbname=$POSTGRES_DB host=postgres user=$POSTGRES_USER password=$POSTGRES_PASSWORD port=5432" /data/route120_IGN-F/route.geojson
 echo "==Create topology=="
 
 read -d '' sql_request << ENDSQL
@@ -95,4 +114,5 @@ select pgr_createtopology('edge',0.0001, clean:=true);
 
 ENDSQL
 
-docker exec -u 999 pgr_postgres_1 psql $POSTGRES_DB -c "$sql_request"
+dc exec -u 999 postgres psql $POSTGRES_DB -c "$sql_request"
+dc restart node

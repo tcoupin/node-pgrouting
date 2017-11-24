@@ -16,6 +16,7 @@ services:
     volumes:
       - '..:/app'
     tty: true
+    command: bash /app/dev/start.sh 
 
   gdal:
     image: geodata/gdal:2.1.3
