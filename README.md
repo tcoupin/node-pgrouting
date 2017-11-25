@@ -1,5 +1,11 @@
 # node-pgrouting
 
+[![Travis](https://img.shields.io/travis/tcoupin/node-pgrouting.svg?style=flat-square)](https://travis-ci.org/tcoupin/node-pgrouting)
+[![Dependency Status](https://david-dm.org/tcoupin/node-pgrouting.svg)](https://david-dm.org/tcoupin/node-pgrouting)
+[![npm](https://img.shields.io/npm/dt/node-pgrouting.svg?style=flat-square)](https://www.npmjs.com/package/node-pgrouting)
+[![npm](https://img.shields.io/npm/v/node-pgrouting.svg?style=flat-square)](https://www.npmjs.com/package/node-pgrouting)
+[![Twitter](https://img.shields.io/twitter/url/https/github.com/tcoupin/node-pgrouting.svg?style=social)](https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2Ftcoupin%2Fnode-pgrouting)
+
 A simple interface to pgRouting.
 
 Features:
