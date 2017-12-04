@@ -118,8 +118,9 @@ class RouteEngine {
           response.cost[v]=0;
         })
         
-        let startPoints=await this._findNearestEdge(params.from, params.avoid);
-        let endPoints=await this._findNearestEdge(params.to, params.avoid);
+        let StartEndPoints = await Promise.all([this._findNearestEdge(params.from, params.avoid),this._findNearestEdge(params.to, params.avoid)])
+        let startPoints=StartEndPoints[0];
+        let endPoints=StartEndPoints[1];
         
         let path = await this._searchPath(params.type, startPoints, endPoints, params.avoid)
         if (path.length == 0){
