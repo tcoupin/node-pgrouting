@@ -26,7 +26,7 @@ module.exports = {
 						st_distance(edge_table.the_geom,st_setsrid(st_makepoint($2,$1),4326),true) as distance,
 						ST_AsGeoJSON(st_LineInterpolatePoint(edge_table.the_geom,st_LineLocatePoint(edge_table.the_geom,st_setsrid(st_makepoint($2,$1),4326)))) as edge_point
 				FROM ${schema}.${table} as edge_table
-				WHERE st_dwithin(edge_table.the_geom,st_setsrid(st_makepoint($2,$1),4326),${maxSnappingDistance},true) ${filters_where}
+				WHERE st_dwithin(edge_table.the_geom,st_setsrid(st_makepoint($2,$1),4326),${maxSnappingDistance}/st_distance(st_setsrid(st_makepoint(0,$1),4326),st_setsrid(st_makepoint(1,$1),4326),true)) ${filters_where}
 				ORDER BY st_distance(edge_table.the_geom,st_setsrid(st_makepoint($2,$1),4326),true)
 				LIMIT 1`
 	},
@@ -42,7 +42,7 @@ module.exports = {
 							(case when (min(distance) over (order by distance)) = 0 then (case when distance = 0 then 0 else 100 end) else (distance-(min(distance) over (order by distance)))/(min(distance) over (order by distance)) end) ratio,
 							(	select edge_table.id
 								from ${schema}.${table} as edge_table
-								where 	st_dwithin(edge_table.the_geom,st_setsrid(st_makepoint($2,$1),4326),${maxSnappingDistance},true) and
+								where 	st_dwithin(edge_table.the_geom,st_setsrid(st_makepoint($2,$1),4326),${maxSnappingDistance}/st_distance(st_setsrid(st_makepoint(0,$1),4326),st_setsrid(st_makepoint(1,$1),4326),true)) and
 										st_intersects(edge_table.the_geom, new_geom) and
 										edge_table.id <> edge_id
 								limit 1
@@ -61,7 +61,7 @@ module.exports = {
 										)
 								),0.0001,0.9999) new_geom
 						FROM ${schema}.${table} as edge_table
-						WHERE st_dwithin(edge_table.the_geom,st_setsrid(st_makepoint($2,$1),4326),${maxSnappingDistance},true) ${filters_where}
+						WHERE st_dwithin(edge_table.the_geom,st_setsrid(st_makepoint($2,$1),4326),${maxSnappingDistance}/st_distance(st_setsrid(st_makepoint(0,$1),4326),st_setsrid(st_makepoint(1,$1),4326),true)) ${filters_where}
 						ORDER BY st_distance(edge_table.the_geom,st_setsrid(st_makepoint($2,$1),4326),true)
 					) tmp
 				) tmp
