@@ -29,9 +29,14 @@
 			<div id="filters">
 				<h3>Avoid:</h3>
 			</div>
+			<div id="values">
+				<h3>Values:</h3>
+				<input type="text" id="values" placeholder="Coma separated values">
+			</div>
 		</div>
 		<div id="results"></div>
 		<script>
+					var current = "";
 					var setStartPoint = function(e){
 						if (startLayer !== undefined){
 							mymap.removeLayer(startLayer);
@@ -46,6 +51,30 @@
 						endLayer = L.marker([e.latlng.lat, e.latlng.lng],{icon: L.spriteIcon('red')}).addTo(mymap);
 						routeMe();
 					}
+					var setIsoStartPoint = function(e){
+						if (startLayer !== undefined){
+							mymap.removeLayer(startLayer);
+							startLayer = undefined;
+						}
+						if (endLayer !== undefined){
+							mymap.removeLayer(endLayer);
+							endLayer = undefined;
+						}
+						startLayer = L.marker([e.latlng.lat, e.latlng.lng],{icon: L.spriteIcon('green')}).addTo(mymap);
+						iso();
+					}
+					var setIsoEndPoint = function(e){
+						if (startLayer !== undefined){
+							mymap.removeLayer(startLayer);
+							startLayer = undefined;
+						}
+						if (endLayer !== undefined){
+							mymap.removeLayer(endLayer);
+							endLayer = undefined;
+						}
+						endLayer = L.marker([e.latlng.lat, e.latlng.lng],{icon: L.spriteIcon('red')}).addTo(mymap);
+						iso();
+					}
 					var mymap = L.map('map',
 						{
 							contextmenu: true,
@@ -53,6 +82,9 @@
 							contextmenuItems: [
 								{text: 'Start here',callback: setStartPoint},
 								{text: 'Go here',callback: setEndPoint},
+								'-',
+								{text: 'Iso from here', callback: setIsoStartPoint},
+								{text: 'Iso to here', callback: setIsoEndPoint},
 							]
 						}
 					).setView([46.87521339672271, 2.65869140625], 6);
@@ -98,9 +130,14 @@
 						capa.filters.forEach((v)=>{
 							$("div#filters").append("<input type='checkbox' id='type"+v+"' name='type' value='"+v+"'><label for='type"+v+"'>"+v+"</label>")
 						})
-						$("div#form input").on('change',routeMe);
+						$("div#form input").on('change',onChange);
 					});
+					var onChange = function(){
+						current();
+					}
 					var routeMe = function(){
+						$("div#values").hide();
+						current = routeMe;
 						console.log("routeMe")
 						if (startLayer === undefined || endLayer === undefined){
 							return;
@@ -125,6 +162,7 @@
 								mymap.removeLayer(resultLayer);
 							}
 							resultLayer = L.geoJSON(data).addTo(mymap);
+							mymap.fitBounds(resultLayer.getBounds())
 							var mainLineString = [];
 							resultLayer.eachLayer(function(lay){
 								var geom = lay.feature.geometry;
@@ -168,6 +206,46 @@
 								})
 								return table
 							})
+						})
+					};
+
+					var iso = function(){
+						console.log("iso")
+						$("div#values").show();
+						current = iso;
+						if (startLayer === undefined && endLayer === undefined){
+							return;
+						}
+						let point, sens;
+						if (startLayer !== undefined){
+							point = startLayer.getLatLng().lat+","+startLayer.getLatLng().lng;
+							sens = "from";
+						}
+						if (endLayer !== undefined){
+							point = endLayer.getLatLng().lat+","+endLayer.getLatLng().lng;
+							sens = "to";
+						}
+						let type = $("div#type input:checked").val();
+						let filters = [];
+						$("div#filters input:checked").each(function(){
+							filters.push($(this).val())
+						})
+						filters = filters.join(',');
+						let values = $("input#values").val();
+
+						let url = "/app/isocurve?";
+						url+=sens+"="+point+"&";
+						url+="type="+type+"&";
+						url+="avoid="+filters+"&";
+						url+="values="+values;
+						console.log(url)
+						$.getJSON(url,function(data){
+							if (resultLayer !== undefined){
+								mymap.removeLayer(resultLayer);
+							}
+							resultLayer = L.geoJSON(data).addTo(mymap);
+							mymap.fitBounds(resultLayer.getBounds())
+							$("#results").empty();
 						})
 					}
 		</script>

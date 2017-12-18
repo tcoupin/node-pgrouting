@@ -1,3 +1,4 @@
+/* jshint node: true, esversion: 6 */
 const assert = require('assert');
 const routeEngine = require('../src/index');
 require('it-each')({ testPerIteration: true });

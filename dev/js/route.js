@@ -7,10 +7,22 @@ module.exports = function(conf){
 		snappingRatio: 0.6
 	})
 
-	//compute
 	app.get('/route', async function(req,res){
 		try {
 			let results = await routeEngine.routing(req.query);
+			res.json(results);
+		} catch (e){
+			if (e.name == 'routeError'){
+				res.status(400).send(e);
+			} else {
+				res.status(500).send("Internal Server Error: "+e);
+			}
+		}
+	})
+
+	app.get('/isocurve', async function(req,res){
+		try {
+			let results = await routeEngine.isocurve(req.query);
 			res.json(results);
 		} catch (e){
 			if (e.name == 'routeError'){

@@ -1,0 +1,16 @@
+{
+    "preset": "idiomatic",
+    "disallowSpacesInsideParentheses": false,
+    "maximumLineLength" : 250,
+    "requireCamelCaseOrUpperCaseIdentifiers": {
+    	"allExcept": [
+    		"the_geom",
+    		"edge_point",
+    		"edge_id",
+    		"start_pid",
+    		"end_pid",
+    		"column_name"
+    	]
+    }
+
+}
