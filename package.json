@@ -1,7 +1,7 @@
 {
   "name": "node-pgrouting",
-  "version": "0.2.1",
-  "description": "Simple routing API based on pgrouting.",
+  "version": "0.3.0",
+  "description": "A simple interface to pgRouting to compute route and isocurve.",
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\""
