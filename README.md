@@ -14,6 +14,7 @@ Features:
 * Filters
 * Aggregation of identical sections based on its properties
 * Multi-snapping
+* routing AND isocurve
 
 ## How to use ?
 
@@ -26,6 +27,17 @@ let geojeson_results = await pgr.routing({from:"46,1",to:"47,2","type":"duration
 
 * The `routing` return a Promise, so you can use the async/await like above or the Promise itself.
 * `type` and `avoid` depend on data structure (see [Data structure](#data-structure))
+
+### Isocurve
+
+```javascript
+const pgr = require("node-pgrouting")(conf);
+let geojeson_results = await pgr.isocurve({from:"46,1","type":"duration", "avoid":"toll", "values":"3600,7200"});
+```
+
+* The `isocurve` return a Promise, so you can use the async/await like above or the Promise itself.
+* `type` and `avoid` depend on data structure (see [Data structure](#data-structure))
+* `from` or `to`
 
 ### Capabilities (data structure)
 
