@@ -7,7 +7,6 @@ function dc(){
 }
 
 dc up -d
-dc exec node npm install
 
 status=1
 while [ "$status" != "0" ]
@@ -22,7 +21,9 @@ dc exec -u 999 postgres psql $POSTGRES_DB -c "CREATE EXTENSION IF NOT EXISTS pos
 dc exec -u 999 postgres psql $POSTGRES_DB -c "CREATE EXTENSION IF NOT EXISTS pgrouting;"
 
 echo "==Import data=="
-dc exec gdal ogr2ogr -progress -overwrite -nln route  -f PostgreSQL PG:"dbname=$POSTGRES_DB host=postgres user=$POSTGRES_USER password=$POSTGRES_PASSWORD port=5432" /data/route120_IGN-F/route.geojson
+dc exec node npm install geojson2pgsql
+dc exec node ./node_modules/.bin/geojson2pgsql dev/data/route120_IGN-F/route.geojson route
+
 echo "==Create topology=="
 
 read -d '' sql_request << ENDSQL

@@ -4,7 +4,8 @@
   "description": "A simple interface to pgRouting to compute route and isocurve.",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\""
+    "start": "grunt",
+    "test": "grunt test"
   },
   "repository": {
     "url": "https://git@github.com/tcoupin/node-pgrouting.git"
@@ -20,6 +21,7 @@
   "homepage": "https://github.com/tcoupin/node-pgrouting#README",
   "devDependencies": {
     "express": "^4.16.2",
+    "geojson2pgsql": "0.0.1",
     "grunt": "^1.0.1",
     "grunt-contrib-jshint": "^1.1.0",
     "grunt-contrib-nodemon": "^0.5.4",

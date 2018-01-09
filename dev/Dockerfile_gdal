@@ -1,0 +1,5 @@
+FROM arm32v7/debian:stretch
+
+RUN apt-get update && \
+    apt-get install -y gdal-bin && \
+    rm -rf /var/lib/apt/lists/*
